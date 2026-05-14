@@ -1,17 +1,27 @@
 import { motion } from 'framer-motion';
 
-export default function SkeletonCard({ height = 120 }) {
+export default function SkeletonCard({ height = 400 }) {
   return (
     <motion.div
       style={{
         height,
-        borderRadius: 'var(--radius-card)',
-        background: 'linear-gradient(90deg, #f0ede8 25%, #faf8f5 50%, #f0ede8 75%)',
-        backgroundSize: '200% 100%',
-        border: '1px solid var(--border)'
+        borderRadius: 'var(--radius-xl)',
+        background: 'rgba(255, 255, 255, 0.03)',
+        border: '1px solid var(--border)',
+        position: 'relative',
+        overflow: 'hidden'
       }}
-      animate={{ backgroundPosition: ['200% 0', '-200% 0'] }}
-      transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-    />
+    >
+      <motion.div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent)',
+          transform: 'translateX(-100%)'
+        }}
+        animate={{ transform: 'translateX(100%)' }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+      />
+    </motion.div>
   );
 }

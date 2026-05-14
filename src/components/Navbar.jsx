@@ -2,51 +2,51 @@ import { NavLink, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const navLinks = [
-  { to: '/player',   label: 'Player Analysis' },
-  { to: '/opponent', label: 'Opponent Intel' },
-  { to: '/h2h',      label: 'Head to Head' },
-  { to: '/zone',     label: 'Zone Map' },
-  { to: '/league',   label: 'League' },
-  { to: '/chat',     label: 'Chat' },
+  { to: '/player',   label: 'ANALYSIS' },
+  { to: '/opponent', label: 'SCOUT' },
+  { to: '/h2h',      label: 'H2H' },
+  { to: '/zone',     label: 'ZONES' },
+  { to: '/league',   label: 'LEAGUE' },
+  { to: '/chat',     label: 'AI CHAT' },
 ];
 
 export default function Navbar() {
   return (
-    <nav className="navbar glass" style={{ height: '80px', position: 'sticky', top: 0, zIndex: 1000 }}>
-      <div className="nav-container">
-        {/* Logo */}
-        <Link to="/" style={{ textDecoration: 'none' }}>
+    <nav className="nav-wrapper">
+      <div className="logo-container">
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="logo-icon">
+            <span style={{ transform: 'rotate(10deg)' }}>K</span>
+          </div>
           <span style={{ 
             fontFamily: 'var(--font-heading)', 
             fontWeight: 800, 
-            fontSize: '1.8rem', 
-            letterSpacing: '-0.02em',
-            color: 'var(--text)' 
+            fontSize: '1.6rem', 
+            letterSpacing: '-0.04em',
+            color: 'white' 
           }}>
-            Kabaddi<span className="text-gradient">IQ</span>
+            KABADDI<span className="gradient-text">IQ</span>
           </span>
         </Link>
-
-        {/* Nav links */}
-        <div className="nav-links">
-          {navLinks.map(link => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-            >
-              {link.label}
-            </NavLink>
-          ))}
-        </div>
-
-        {/* CTA */}
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <Link to="/player" className="btn-premium" style={{ textDecoration: 'none', padding: '12px 28px' }}>
-            Explore Now
-          </Link>
-        </motion.div>
       </div>
+
+      <div className="nav-links-premium">
+        {navLinks.map(link => (
+          <NavLink
+            key={link.to}
+            to={link.to}
+            className={({ isActive }) => `nav-link-premium${isActive ? ' active' : ''}`}
+          >
+            {link.label}
+          </NavLink>
+        ))}
+      </div>
+
+      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <Link to="/chat" className="btn-cta btn-primary" style={{ textDecoration: 'none', padding: '12px 24px', fontSize: '0.85rem' }}>
+          LAUNCH AI →
+        </Link>
+      </motion.div>
     </nav>
   );
 }

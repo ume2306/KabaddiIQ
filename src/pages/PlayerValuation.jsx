@@ -2,8 +2,15 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { getPlayer, searchPlayers } from '../api/kabaddiiq';
-import SkeletonCard from '../components/SkeletonCard';
 import ErrorMessage from '../components/ErrorMessage';
+
+const SkeletonHuge = () => (
+  <motion.div 
+    animate={{ opacity: [0.1, 0.2, 0.1] }} 
+    transition={{ duration: 1.5, repeat: Infinity }}
+    style={{ background: 'white', borderRadius: '32px', height: '600px', width: '100%', opacity: 0.1 }}
+  />
+);
 
 export default function PlayerValuation() {
   const [query, setQuery] = useState('');
@@ -30,44 +37,52 @@ export default function PlayerValuation() {
       const data = await getPlayer(name);
       setPlayer(data);
     } catch (err) {
-      setError(err.response?.status === 404 ? "Player not found in our database." : "Could not connect to analysis server.");
+      setError(err.response?.status === 404 ? "Player not found." : "Server connection failed.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="container" style={{ paddingTop: '4rem' }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '4rem' }}>
-        <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>Player <span className="text-gradient">Valuation</span></h1>
-        <p style={{ color: 'var(--muted)', marginBottom: '2.5rem' }}>AI-driven performance metrics for every PKL player</p>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="container" style={{ paddingTop: '160px', paddingBottom: '100px' }}>
+      {/* ── Search Header ── */}
+      <div style={{ marginBottom: '6rem' }}>
+        <span className="section-label">PERSONNEL ANALYSIS</span>
+        <h1 style={{ fontSize: '5rem', fontWeight: 900, marginBottom: '2rem', letterSpacing: '-0.04em' }}>
+          PLAYER <span className="gradient-text">VALUATION.</span>
+        </h1>
         
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', maxWidth: '800px' }}>
           <input
-            className="chat-input"
-            style={{ width: '100%', fontSize: '1.1rem', padding: '20px 30px' }}
-            placeholder="Enter player name (e.g. Naveen Kumar)"
+            className="card-premium"
+            style={{ 
+              width: '100%', fontSize: '1.4rem', padding: '30px 40px', 
+              background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--border)',
+              outline: 'none', transition: 'all 0.3s'
+            }}
+            placeholder="SEARCH PLAYER NAME..."
             value={query}
             onChange={(e) => handleSearch(e.target.value)}
           />
           <AnimatePresence>
             {suggestions.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="glass-card"
+                className="card-premium"
                 style={{ 
-                  position: 'absolute', top: '110%', left: 0, width: '100%', zIndex: 100,
-                  maxHeight: '300px', overflowY: 'auto', textAlign: 'left', padding: '0.5rem'
+                  position: 'absolute', top: '105%', left: 0, width: '100%', zIndex: 100,
+                  maxHeight: '400px', overflowY: 'auto', padding: '1rem',
+                  border: '1px solid rgba(255, 107, 53, 0.2)'
                 }}
               >
                 {suggestions.map(s => (
                   <div 
                     key={s} 
                     onClick={() => selectPlayer(s)}
-                    style={{ padding: '1rem', cursor: 'pointer', borderRadius: '12px' }}
-                    className="nav-link"
+                    style={{ padding: '1.25rem', cursor: 'pointer', borderRadius: '16px', fontSize: '1.1rem', fontWeight: 600 }}
+                    className="nav-link-premium"
                   >
                     {s}
                   </div>
@@ -78,66 +93,65 @@ export default function PlayerValuation() {
         </div>
       </div>
 
-      {loading && <div className="grid-2"><SkeletonCard height={400} /><SkeletonCard height={400} /></div>}
+      {loading && <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '3rem' }}><SkeletonHuge /><SkeletonHuge /></div>}
       {error && <ErrorMessage message={error} />}
 
       {!loading && !error && player && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="grid-2" style={{ gap: '2rem', marginBottom: '2rem' }}>
-            {/* Score Card */}
-            <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
-              <div style={{ position: 'relative', display: 'inline-block', marginBottom: '2rem' }}>
-                <svg width="200" height="200">
-                  <circle cx="100" cy="100" r="90" fill="none" stroke="#EEECE8" strokeWidth="12" />
-                  <motion.circle
-                    cx="100" cy="100" r="90" fill="none" stroke="var(--primary)" strokeWidth="12"
-                    strokeDasharray={2 * Math.PI * 90}
-                    initial={{ strokeDashoffset: 2 * Math.PI * 90 }}
-                    animate={{ strokeDashoffset: (2 * Math.PI * 90) * (1 - player.valuation_score / 100) }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    strokeLinecap="round"
-                    transform="rotate(-90 100 100)"
-                  />
-                </svg>
-                <div style={{ 
-                  position: 'absolute', top: '50%', left: '50%', 
-                  transform: 'translate(-50%, -50%)', textAlign: 'center' 
-                }}>
-                  <div style={{ fontSize: '3.5rem', fontWeight: 800, color: 'var(--primary)', fontFamily: 'var(--font-heading)' }}>
-                    {player.valuation_score}
-                  </div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>AI Score</div>
-                </div>
+        <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '3rem', marginBottom: '3rem' }}>
+            
+            {/* ── Main Bio & Energy Core ── */}
+            <div className="card-premium" style={{ display: 'flex', alignItems: 'center', gap: '4rem' }}>
+              <div className="energy-core">
+                <div className="energy-ring" />
+                <motion.div 
+                  className="energy-fill" 
+                  initial={{ clipPath: 'polygon(50% 50%, 50% 0%, 50% 0%, 50% 0%, 50% 0%, 50% 0%, 50% 0%)' }}
+                  animate={{ 
+                    clipPath: `polygon(50% 50%, 50% 0%, ${player.valuation_score > 12.5 ? '100% 0%' : '50% 0%'}, ${player.valuation_score > 37.5 ? '100% 100%' : '50% 100%'}, ${player.valuation_score > 62.5 ? '0% 100%' : '50% 100%'}, ${player.valuation_score > 87.5 ? '0% 0%' : '50% 0%'}, 50% 0%)` 
+                  }}
+                  transition={{ duration: 2, ease: "easeOut" }}
+                />
+                <div className="energy-value">{player.valuation_score}</div>
               </div>
-              
-              <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{player.name}</h2>
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                <span className="pill pill-orange">{player.team}</span>
-                <span className="pill pill-green">{player.tier}</span>
-                <span className={`pill pill-${player.form === 'rising' ? 'green' : 'orange'}`}>Form: {player.form}</span>
+
+              <div>
+                <span className="section-label" style={{ color: 'var(--text-muted)' }}>{player.position}</span>
+                <h2 style={{ fontSize: '4rem', marginBottom: '1rem', lineHeight: 1 }}>{player.name}</h2>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  <span className="btn-cta btn-glass" style={{ padding: '8px 16px', fontSize: '0.8rem' }}>{player.team}</span>
+                  <span className="btn-cta btn-primary" style={{ padding: '8px 16px', fontSize: '0.8rem' }}>{player.tier}</span>
+                  <span style={{ 
+                    color: player.form === 'rising' ? 'var(--secondary)' : '#FF4B4B', 
+                    fontWeight: 800, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' 
+                  }}>
+                    {player.form === 'rising' ? '↑' : '↓'} {player.form.toUpperCase()}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* SHAP / Contributions */}
-            <div className="glass-card" style={{ padding: '2rem' }}>
-              <h3 style={{ marginBottom: '1.5rem' }}>Valuation Drivers (SHAP)</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* ── Performance Drivers ── */}
+            <div className="card-premium">
+              <h3 style={{ fontSize: '1.8rem', marginBottom: '2rem' }}>VALUATION DRIVERS</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 {Object.entries(player.shap).map(([key, val], i) => (
                   <div key={key}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '6px' }}>
-                      <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}</span>
-                      <span style={{ color: val > 0 ? '#10B981' : '#EF4444', fontWeight: 700 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--text-muted)', fontSize: '0.9rem' }}>{key.replace(/_/g, ' ').toUpperCase()}</span>
+                      <span style={{ color: val > 0 ? 'var(--secondary)' : '#FF4B4B', fontWeight: 800 }}>
                         {val > 0 ? '+' : ''}{val.toFixed(2)}
                       </span>
                     </div>
-                    <div style={{ height: '8px', background: '#EEECE8', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(Math.abs(val) * 10, 100)}%` }}
+                        animate={{ width: `${Math.min(Math.abs(val) * 12, 100)}%` }}
+                        transition={{ duration: 1, delay: i * 0.1 }}
                         style={{ 
                           height: '100%', 
-                          background: val > 0 ? '#10B981' : '#EF4444',
-                          marginLeft: val > 0 ? '0' : 'auto'
+                          background: val > 0 ? 'var(--secondary)' : '#FF4B4B',
+                          boxShadow: `0 0 10px ${val > 0 ? 'var(--secondary)' : '#FF4B4B'}50`
                         }}
                       />
                     </div>
@@ -146,18 +160,28 @@ export default function PlayerValuation() {
               </div>
             </div>
           </div>
-          
-          {/* Trend */}
-          <div className="glass-card" style={{ padding: '2rem' }}>
-            <h3 style={{ marginBottom: '2rem' }}>Career Trajectory</h3>
-            <div style={{ height: '300px' }}>
+
+          {/* ── Trend Analysis ── */}
+          <div className="card-premium">
+            <h3 style={{ fontSize: '1.8rem', marginBottom: '3rem' }}>SEASONAL TRAJECTORY</h3>
+            <div style={{ height: '400px', width: '100%' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={player.season_trend}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEECE8" />
-                  <XAxis dataKey="season" axisLine={false} tickLine={false} />
-                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="valuation_score" stroke="var(--primary)" strokeWidth={4} dot={{ r: 6, fill: 'var(--primary)' }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="season" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 12 }} />
+                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 12 }} />
+                  <Tooltip 
+                    contentStyle={{ background: '#121214', border: '1px solid var(--border)', borderRadius: '12px' }}
+                    itemStyle={{ color: 'var(--primary)' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="valuation_score" 
+                    stroke="var(--primary)" 
+                    strokeWidth={5} 
+                    dot={{ r: 8, fill: 'var(--primary)', stroke: 'white', strokeWidth: 3 }} 
+                    activeDot={{ r: 10, shadow: '0 0 20px var(--primary)' }}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>

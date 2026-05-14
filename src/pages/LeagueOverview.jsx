@@ -1,324 +1,125 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { leaderboard, hiddenGems, risingStars, teamStrengths } from '../data/league';
+import { getLeagueOverview } from '../api/kabaddiiq';
+import ErrorMessage from '../components/ErrorMessage';
+
+const SkeletonTable = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    {[1,2,3,4,5].map(i => <div key={i} style={{ height: '80px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px' }} />)}
+  </div>
+);
 
 export default function LeagueOverview() {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState('All');
-  const [timeframe, setTimeframe] = useState('This Season');
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filteredLeaderboard = leaderboard.filter(p => 
-    filter === 'All' || p.position === (filter === 'Raiders' ? 'Raider' : 'Defender')
-  );
+  useEffect(() => {
+    const fetchLeague = async () => {
+      try {
+        const res = await getLeagueOverview();
+        setData(res);
+      } catch (err) {
+        setError("Failed to load league data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLeague();
+  }, []);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="container"
-      style={{ paddingTop: '4rem', paddingBottom: '8rem' }}
-    >
-      {/* ── Section 1: Header ─────────────────── */}
-      <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-        <h1 style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>League <span className="text-gradient">Overview</span></h1>
-        <p style={{ color: 'var(--muted)', fontSize: '1.2rem', marginBottom: '3rem' }}>
-          Season 10 — AI-powered rankings, hidden gems, and rising stars
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="container" style={{ paddingTop: '160px', paddingBottom: '100px' }}>
+      <header style={{ marginBottom: '6rem' }}>
+        <span className="section-label">GLOBAL RANKINGS</span>
+        <h1 style={{ fontSize: '5rem', fontWeight: 900, marginBottom: '2rem', letterSpacing: '-0.04em' }}>
+          LEAGUE <span className="gradient-text">PULSE.</span>
+        </h1>
+        <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', maxWidth: '600px' }}>
+          Real-time performance rankings across all franchises. Powered by our proprietary valuation engine.
         </p>
+      </header>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-          {/* Position Toggle */}
-          <div style={{ background: '#EEECE8', padding: '4px', borderRadius: 'var(--radius-pill)', display: 'flex', position: 'relative' }}>
-            {['All', 'Raiders', 'Defenders'].map(opt => (
-              <button
-                key={opt}
-                onClick={() => setFilter(opt)}
+      {loading && <SkeletonTable />}
+      {error && <ErrorMessage message={error} />}
+
+      {!loading && !error && data && (
+        <section style={{ marginBottom: '8rem' }}>
+          <div className="card-premium" style={{ padding: '0', overflow: 'hidden' }}>
+            <div style={{ 
+              display: 'grid', gridTemplateColumns: '100px 2fr 1fr 1.5fr 1fr', 
+              padding: '2rem 3rem', background: 'rgba(255,255,255,0.02)', 
+              fontSize: '0.8rem', fontWeight: 800, color: 'var(--primary)', letterSpacing: '0.1em' 
+            }}>
+              <span>RANK</span>
+              <span>PLAYER</span>
+              <span>TIER</span>
+              <span>AI VALUATION</span>
+              <span>FORM</span>
+            </div>
+            
+            {data.top10.map((player, idx) => (
+              <motion.div
+                key={player.name}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                onClick={() => navigate(`/player?search=${player.name}`)}
+                className="table-row-premium"
                 style={{
-                  padding: '10px 24px',
-                  borderRadius: 'var(--radius-pill)',
-                  border: 'none',
-                  background: filter === opt ? 'white' : 'transparent',
-                  color: filter === opt ? 'var(--primary)' : 'var(--muted)',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  position: 'relative',
-                  zIndex: 1,
-                  boxShadow: filter === opt ? '0 2px 8px rgba(0,0,0,0.1)' : 'none'
+                  display: 'grid', gridTemplateColumns: '100px 2fr 1fr 1.5fr 1fr',
+                  alignItems: 'center', padding: '2.5rem 3rem', cursor: 'pointer',
+                  borderTop: '1px solid var(--border)', transition: 'all 0.3s'
                 }}
               >
-                {opt}
-              </button>
-            ))}
-          </div>
-
-          {/* Timeframe Toggle */}
-          <div style={{ background: '#EEECE8', padding: '4px', borderRadius: 'var(--radius-pill)', display: 'flex' }}>
-            {['This Season', 'All Time'].map(opt => (
-              <button
-                key={opt}
-                onClick={() => setTimeframe(opt)}
-                style={{
-                  padding: '8px 20px',
-                  borderRadius: 'var(--radius-pill)',
-                  border: 'none',
-                  background: timeframe === opt ? 'var(--primary)' : 'transparent',
-                  color: timeframe === opt ? 'white' : 'var(--muted)',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Section 2: Leaderboard ────────────── */}
-      <section style={{ marginBottom: '6rem' }}>
-        <h2 style={{ marginBottom: '2rem' }}>Performance Rankings</h2>
-        <div className="glass-card" style={{ padding: '1rem', overflow: 'hidden' }}>
-          {filteredLeaderboard.map((player, index) => (
-            <motion.div
-              key={player.rank}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-              onClick={() => navigate(`/player?search=${player.name}`)}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '80px 2fr 1fr 1fr 1fr 1fr',
-                alignItems: 'center',
-                padding: '1.25rem 1.5rem',
-                borderBottom: index === filteredLeaderboard.length - 1 ? 'none' : '1px solid var(--border)',
-                cursor: 'pointer',
-                background: player.rank === 1 ? '#FFF5F0' : (player.rank <= 3 ? '#FFFBF0' : 'transparent'),
-                transition: 'all 0.2s ease',
-                borderLeft: '4px solid transparent'
-              }}
-              whileHover={{ borderLeftColor: 'var(--primary)', background: '#F9F9F9' }}
-            >
-              <span style={{ 
-                fontSize: '1.5rem', 
-                fontWeight: 800, 
-                color: player.rank <= 3 ? 'var(--primary)' : 'var(--muted)',
-                fontFamily: 'var(--font-heading)'
-              }}>
-                #{player.rank}
-              </span>
-              
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{player.name}</div>
-                <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{player.team}</div>
-              </div>
-
-              <span className={`pill pill-${player.position === 'Raider' ? 'orange' : 'green'}`} style={{ width: 'fit-content' }}>
-                {player.position}
-              </span>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{ fontWeight: 800, color: 'var(--primary)' }}>{player.score}</div>
-                <div style={{ width: '60px', height: '4px', background: '#EEECE8', borderRadius: '2px' }}>
-                  <div style={{ width: `${player.score}%`, height: '100%', background: 'var(--primary)', borderRadius: '2px' }} />
-                </div>
-              </div>
-
-              <span style={{ 
-                color: player.tier === 'Elite' ? 'var(--primary)' : 'var(--text)',
-                fontWeight: 600,
-                fontSize: '0.9rem'
-              }}>
-                {player.tier}
-              </span>
-
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <span style={{ 
-                  color: player.form === 'rising' ? '#10B981' : (player.form === 'falling' ? '#EF4444' : '#F5A623'),
-                  fontSize: '1.2rem'
-                }}>
-                  {player.form === 'rising' ? '↑' : (player.form === 'falling' ? '↓' : '→')}
+                <span style={{ fontSize: '2rem', fontWeight: 900, fontFamily: 'var(--font-heading)', color: idx < 3 ? 'var(--primary)' : 'white' }}>
+                  {idx + 1}
                 </span>
-                <span style={{ 
-                  background: player.change.startsWith('+') ? '#E8F5E9' : (player.change.startsWith('-') ? '#FFEBEE' : '#F5F5F5'),
-                  color: player.change.startsWith('+') ? '#2E7D32' : (player.change.startsWith('-') ? '#C62828' : '#616161'),
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  fontSize: '0.75rem',
-                  fontWeight: 700
-                }}>
-                  {player.change}
-                </span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Section 3: Hidden Gems ───────────── */}
-      <section style={{ marginBottom: '6rem' }}>
-        <div style={{ marginBottom: '3rem' }}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            💎 Hidden Gems
-          </h2>
-          <p style={{ color: 'var(--muted)' }}>High performance, low recognition — fantasy gold</p>
-        </div>
-        
-        <div className="grid-2" style={{ gap: '2rem' }}>
-          {hiddenGems.map((gem, i) => (
-            <motion.div
-              key={gem.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="glass-card"
-              style={{ padding: '2rem', borderLeft: '6px solid #10B981' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                
                 <div>
-                  <h3 style={{ fontSize: '1.3rem', marginBottom: '0.25rem' }}>{gem.name}</h3>
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{gem.team}</span>
-                    <span className="pill pill-green" style={{ fontSize: '0.7rem' }}>{gem.position}</span>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '4px' }}>{player.name}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{player.team}</div>
+                </div>
+
+                <span className={`pill pill-${player.tier === 'Elite' ? 'orange' : 'green'}`} style={{ fontSize: '0.75rem', padding: '6px 12px' }}>
+                  {player.tier}
+                </span>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary)', width: '60px' }}>{player.valuation_score}</span>
+                  <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
+                    <div style={{ width: `${player.valuation_score}%`, height: '100%', background: 'var(--primary)' }} />
                   </div>
                 </div>
-                <div style={{ 
-                  background: '#E8F5E9', 
-                  color: '#2E7D32', 
-                  padding: '4px 12px', 
-                  borderRadius: 'var(--radius-pill)',
-                  fontWeight: 700,
-                  fontSize: '0.8rem'
-                }}>
-                  Gap: +{gem.gap}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ color: player.form === 'rising' ? 'var(--secondary)' : '#FF4B4B', fontSize: '1.5rem' }}>
+                    {player.form === 'rising' ? '↑' : '↓'}
+                  </span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>{player.form}</span>
                 </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '2rem', marginBottom: '1.5rem' }}>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Score</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary)' }}>{gem.score}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recognition</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--muted)' }}>{gem.recognition}%</div>
-                </div>
-              </div>
-
-              <p style={{ color: 'var(--muted)', fontSize: '0.9rem', lineHeight: 1.6 }}>{gem.reason}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Section 4: Rising Stars ──────────── */}
-      <section style={{ marginBottom: '6rem' }}>
-        <div style={{ marginBottom: '3rem' }}>
-          <h2>Rising Stars</h2>
-          <p style={{ color: 'var(--muted)' }}>Players showing strongest growth trajectory</p>
-        </div>
-
-        <div className="grid-3" style={{ gap: '2rem' }}>
-          {risingStars.map((star, i) => (
-            <motion.div
-              key={star.name}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="glass-card"
-              style={{ padding: '2rem' }}
-            >
-              <div style={{ marginBottom: '1.5rem' }}>
-                <h3 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>{star.name}</h3>
-                <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{star.team}</div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
-                <span style={{ 
-                  background: 'rgba(232, 97, 44, 0.1)', 
-                  color: 'var(--primary)', 
-                  padding: '4px 10px', 
-                  borderRadius: '6px', 
-                  fontSize: '0.75rem', 
-                  fontWeight: 700 
-                }}>
-                  +{star.growthRate}% / season
-                </span>
-                <span style={{ 
-                  background: '#FFF8E1', 
-                  color: '#F57F17', 
-                  padding: '4px 10px', 
-                  borderRadius: '6px', 
-                  fontSize: '0.75rem', 
-                  fontWeight: 700 
-                }}>
-                  Breakout Potential
-                </span>
-              </div>
-
-              <div style={{ height: '120px', width: '100%' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={star.trajectory.map((val, idx) => ({ val, idx }))}>
-                    <Line 
-                      type="monotone" 
-                      dataKey="val" 
-                      stroke="var(--primary)" 
-                      strokeWidth={3} 
-                      dot={{ r: 4, fill: 'var(--primary)' }} 
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Section 5: Team Strength Index ───── */}
-      <section>
-        <h2 style={{ marginBottom: '3rem' }}>Team Strength Index</h2>
-        <div className="glass-card" style={{ padding: '2rem' }}>
-          <div style={{ height: '400px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={teamStrengths} layout="vertical" margin={{ left: 120 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#EEECE8" />
-                <XAxis type="number" domain={[0, 100]} hide />
-                <YAxis dataKey="team" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 13, fontWeight: 500 }} />
-                <Tooltip 
-                  cursor={{ fill: 'transparent' }} 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.1)' }}
-                />
-                <Bar dataKey="raiderStrength" name="Raider Strength" fill="var(--primary)" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="defenderStrength" name="Defender Strength" fill="#10B981" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+              </motion.div>
+            ))}
           </div>
+        </section>
+      )}
 
-          <div style={{ 
-            marginTop: '3rem', 
-            padding: '2rem', 
-            background: 'var(--grad-primary)', 
-            borderRadius: '20px', 
-            color: 'white',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div>
-              <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '0.5rem' }}>OVERALL STRONGEST TEAM</div>
-              <h3 style={{ fontSize: '2rem' }}>{teamStrengths.sort((a, b) => b.overall - a.overall)[0].team}</h3>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '3rem', fontWeight: 800 }}>{teamStrengths.sort((a, b) => b.overall - a.overall)[0].overall}</div>
-              <div style={{ fontSize: '0.8rem', opacity: 0.9 }}>INDEX SCORE</div>
-            </div>
-          </div>
+      {/* ── Season Highlights ── */}
+      <section className="grid-2" style={{ gap: '3rem' }}>
+        <div className="card-premium">
+          <span className="section-label">TOP RAIDER</span>
+          <h3 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>NAVEEN KUMAR</h3>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Maintained Elite tier for 4 consecutive seasons with 73% raid success.</p>
+          <div className="btn-cta btn-primary" style={{ padding: '12px 24px', fontSize: '0.8rem' }}>VIEW PROFILE</div>
+        </div>
+        <div className="card-premium">
+          <span className="section-label">CLUTCH DEFENDER</span>
+          <h3 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>FAZEL ATRACHALI</h3>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Highest tackle efficiency in death minutes (35-40) this season.</p>
+          <div className="btn-cta btn-glass" style={{ padding: '12px 24px', fontSize: '0.8rem' }}>VIEW PROFILE</div>
         </div>
       </section>
     </motion.div>
