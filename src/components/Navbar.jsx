@@ -1,5 +1,6 @@
 import { NavLink, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import RaiderLogo from './RaiderLogo';
 
 const navLinks = [
   { to: '/player',   label: 'ANALYSIS' },
@@ -14,16 +15,14 @@ export default function Navbar() {
   return (
     <nav className="nav-wrapper">
       <div className="logo-container">
-        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div className="logo-icon">
-            <span style={{ transform: 'rotate(10deg)' }}>K</span>
-          </div>
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <RaiderLogo />
           <span style={{ 
             fontFamily: 'var(--font-heading)', 
-            fontWeight: 800, 
-            fontSize: '1.6rem', 
-            letterSpacing: '-0.04em',
-            color: 'white' 
+            fontWeight: 900, 
+            fontSize: '1.8rem', 
+            letterSpacing: '-0.05em',
+            color: '#0F172A' 
           }}>
             KABADDI<span className="gradient-text">IQ</span>
           </span>
@@ -43,8 +42,8 @@ export default function Navbar() {
       </div>
 
       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-        <Link to="/chat" className="btn-cta btn-primary" style={{ textDecoration: 'none', padding: '12px 24px', fontSize: '0.85rem' }}>
-          LAUNCH AI →
+        <Link to="/chat" className="btn-cta btn-primary" style={{ textDecoration: 'none', padding: '14px 32px', fontSize: '0.9rem' }}>
+          LAUNCH AI
         </Link>
       </motion.div>
     </nav>
