@@ -12,17 +12,23 @@ const navLinks = [
 
 export default function Navbar() {
   return (
-    <nav className="navbar" role="navigation" aria-label="Main navigation">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 1200, margin: '0 auto' }}>
+    <nav className="navbar glass" style={{ height: '80px', position: 'sticky', top: 0, zIndex: 1000 }}>
+      <div className="nav-container">
         {/* Logo */}
         <Link to="/" style={{ textDecoration: 'none' }}>
-          <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.4rem', color: 'var(--text)' }}>
-            Kabaddi<span style={{ color: 'var(--primary)' }}>IQ</span>
+          <span style={{ 
+            fontFamily: 'var(--font-heading)', 
+            fontWeight: 800, 
+            fontSize: '1.8rem', 
+            letterSpacing: '-0.02em',
+            color: 'var(--text)' 
+          }}>
+            Kabaddi<span className="text-gradient">IQ</span>
           </span>
         </Link>
 
         {/* Nav links */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }} className="nav-links-desktop">
+        <div className="nav-links">
           {navLinks.map(link => (
             <NavLink
               key={link.to}
@@ -35,8 +41,8 @@ export default function Navbar() {
         </div>
 
         {/* CTA */}
-        <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
-          <Link to="/player" className="btn-primary" style={{ fontSize: '0.85rem', padding: '10px 20px' }}>
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Link to="/player" className="btn-premium" style={{ textDecoration: 'none', padding: '12px 28px' }}>
             Explore Now
           </Link>
         </motion.div>
